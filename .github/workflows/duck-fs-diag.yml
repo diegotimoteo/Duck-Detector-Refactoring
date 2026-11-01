@@ -1,0 +1,58 @@
+name: Duck FUSE Diagnostic APK
+
+on:
+  push:
+    branches: ["diag/fuse-paths"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/diag/fuse-paths'
+    name: Build diagnostic APK
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout with submodules
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          submodules: true
+          persist-credentials: false
+
+      - name: Set up Android build toolchain
+        uses: ./.github/actions/setup-android-build
+        with:
+          cache-read-only: "true"
+
+      - name: Generate contributors asset
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./gradlew --stacktrace -Pduckdetector.githubContributors.refresh=true :app:generateGithubContributorsAsset
+
+      - name: Build diagnostic APK
+        run: ./gradlew --stacktrace :app:assembleDebug
+
+      - name: Verify diagnostic APK identity and signature
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t apks < <(find app/build/outputs/apk/debug -name '*.apk' -type f)
+          test "${#apks[@]}" -gt 0
+          build_tools=$(sed -n 's/^duckdetector.android.buildTools=//p' gradle.properties)
+          for apk in "${apks[@]}"; do
+            badging=$("$ANDROID_HOME/build-tools/$build_tools/aapt" dump badging "$apk")
+            grep -q "package: name='com.eltavine.duckdetector.fsdiag'" <<< "$badging"
+            "$ANDROID_HOME/build-tools/$build_tools/apksigner" verify "$apk"
+            sha256sum "$apk"
+          done
+
+      - name: Publish diagnostic APK
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: DuckDetector-FsDiag-Android17
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          retention-days: 7
