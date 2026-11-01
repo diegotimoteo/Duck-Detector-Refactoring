@@ -31,6 +31,13 @@ android {
         applicationId = "com.eltavine.duckdetector"
     }
 
+    // Install diagnostic debug builds alongside the original app.
+    buildTypes {
+        getByName("debug") {
+            applicationIdSuffix = ".fsdiag"
+        }
+    }
+
     // This fixture needs the app's assembled native library; its source stays with the feature.
     sourceSets.getByName("androidTest").kotlin.srcDir(
         rootProject.file("feature/zygisk/data/src/deviceTest/kotlin"),
