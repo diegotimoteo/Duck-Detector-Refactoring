@@ -127,6 +127,29 @@ internal fun checkFuseDataPath(packageName: String): Boolean {
                         "isDirectoryError=${isDirectory.exceptionOrNull()?.javaClass?.simpleName}",
                 )
             }
+            // Supplemental in-process libc probes. They run only AFTER the original
+            // verdict, never influence it, and never attach a tracer to the app.
+            val stat = runCatching { Os.stat(path) }
+            val lstat = runCatching { Os.lstat(path) }
+            val access = runCatching { Os.access(path, OsConstants.F_OK) }
+            val statMode = stat.getOrNull()?.st_mode
+            val lstatMode = lstat.getOrNull()?.st_mode
+            runCatching {
+                android.util.Log.i(
+                    "DuckFsDiagSys",
+                    "uid=${android.os.Process.myUid()} path=$path " +
+                        "statOk=${stat.isSuccess} " +
+                        "statDir=${statMode?.let(OsConstants::S_ISDIR)} " +
+                        "statMode=${statMode?.toString(8)} " +
+                        "statErrno=${(stat.exceptionOrNull() as? ErrnoException)?.errno} " +
+                        "lstatOk=${lstat.isSuccess} " +
+                        "lstatDir=${lstatMode?.let(OsConstants::S_ISDIR)} " +
+                        "lstatMode=${lstatMode?.toString(8)} " +
+                        "lstatErrno=${(lstat.exceptionOrNull() as? ErrnoException)?.errno} " +
+                        "access=${access.getOrNull()} " +
+                        "accessErrno=${(access.exceptionOrNull() as? ErrnoException)?.errno}",
+                )
+            }
         }
     }
     return detected
