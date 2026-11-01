@@ -107,11 +107,29 @@ internal fun checkFuseDataPath(packageName: String): Boolean {
         "/storage/emulated/0/Android/data/$packageName",
         "/storage/emulated/0/Android/obb/$packageName",
     )
-    return paths.any { path ->
+    // Preserve the original verdict and its short-circuit evaluation.
+    val detected = paths.any { path ->
         runCatching {
             File(path).exists() && File(path).isDirectory
         }.getOrDefault(false)
     }
+    if (packageName == "com.sukisu.ultra") {
+        // Independent diagnostic samples must not feed back into the verdict.
+        paths.forEach { path ->
+            val exists = runCatching { File(path).exists() }
+            val isDirectory = runCatching { File(path).isDirectory }
+            runCatching {
+                android.util.Log.i(
+                    "DuckFsDiag",
+                    "uid=${android.os.Process.myUid()} path=$path " +
+                        "exists=${exists.getOrNull()} isDirectory=${isDirectory.getOrNull()} " +
+                        "existsError=${exists.exceptionOrNull()?.javaClass?.simpleName} " +
+                        "isDirectoryError=${isDirectory.exceptionOrNull()?.javaClass?.simpleName}",
+                )
+            }
+        }
+    }
+    return detected
 }
 
 internal fun checkPathExists(path: String): Boolean {
