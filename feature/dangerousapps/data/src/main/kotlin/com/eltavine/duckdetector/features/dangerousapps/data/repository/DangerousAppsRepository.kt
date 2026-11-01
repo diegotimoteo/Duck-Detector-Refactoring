@@ -153,7 +153,7 @@ class DangerousAppsRepository(
 
         val fuseStatDiagnostics = mutableListOf<String>()
         targets.forEach { target ->
-            if (checkFuseDataPath(target.packageName, fuseStatDiagnostics::add)) {
+            if (checkFuseDataPath(target.packageName) { observation -> fuseStatDiagnostics.add(observation) }) {
                 appendMethod(
                     detectedApps = detectedApps,
                     target = target,
