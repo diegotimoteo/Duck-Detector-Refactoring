@@ -294,6 +294,14 @@ class DangerousAppsCardModelMapper {
                 add(DangerousAppsDetailRowModel("Shared storage baseline", "Access denied", DetectorStatus.warning(),
                     "Fixed baseline paths returned EACCES/EPERM. This is a storage visibility indicator and does not identify an installed package or a hiding implementation."))
             }
+            if (report.fuseStatDiagnostics.isNotEmpty()) {
+                add(DangerousAppsDetailRowModel(
+                    "FUSE direct-path diagnostics",
+                    "${report.fuseStatDiagnostics.size} observations (info only)",
+                    DetectorStatus.info(InfoKind.SUPPORT),
+                    report.fuseStatDiagnostics.joinToString("\n"),
+                ))
+            }
             if (report.issues.isNotEmpty()) {
                 add(DangerousAppsDetailRowModel("Scan issues", report.issues.size.toString(),
                     DetectorStatus.info(InfoKind.SUPPORT), report.issues.joinToString("\n")))

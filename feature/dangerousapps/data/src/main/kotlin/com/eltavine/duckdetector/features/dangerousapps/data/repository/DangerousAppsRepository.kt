@@ -151,8 +151,9 @@ class DangerousAppsRepository(
             )
         }
 
+        val fuseStatDiagnostics = mutableListOf<String>()
         targets.forEach { target ->
-            if (checkFuseDataPath(target.packageName)) {
+            if (checkFuseDataPath(target.packageName, fuseStatDiagnostics::add)) {
                 appendMethod(
                     detectedApps = detectedApps,
                     target = target,
@@ -265,6 +266,7 @@ class DangerousAppsRepository(
             behaviorChecks = behaviorChecks,
             packageChangeHistory = packageChangeHistory,
             thanoxIpc = thanoxIpc,
+            fuseStatDiagnostics = fuseStatDiagnostics,
         )
     }
 

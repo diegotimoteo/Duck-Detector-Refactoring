@@ -84,6 +84,8 @@ data class DangerousAppsReport(
         PackageChangeHistoryState.NOT_COLLECTED,
     ),
     val thanoxIpc: ThanoxIpcReport = ThanoxIpcReport(ThanoxIpcState.NOT_COLLECTED),
+    // Observation-only data for debugging direct FUSE path checks.
+    val fuseStatDiagnostics: List<String> = emptyList(),
 ) {
     val detectedCount: Int
         get() = findings.size

@@ -102,7 +102,7 @@ private fun execDirectoryListing(
     }
 }
 
-internal fun checkFuseDataPath(packageName: String): Boolean {
+internal fun checkFuseDataPath(packageName: String, diagnosticSink: ((String) -> Unit)? = null): Boolean {
     val paths = listOf(
         "/storage/emulated/0/Android/data/$packageName",
         "/storage/emulated/0/Android/obb/$packageName",
@@ -134,22 +134,19 @@ internal fun checkFuseDataPath(packageName: String): Boolean {
             val access = runCatching { Os.access(path, OsConstants.F_OK) }
             val statMode = stat.getOrNull()?.st_mode
             val lstatMode = lstat.getOrNull()?.st_mode
-            runCatching {
-                android.util.Log.i(
-                    "DuckFsDiagSys",
-                    "uid=${android.os.Process.myUid()} path=$path " +
-                        "statOk=${stat.isSuccess} " +
-                        "statDir=${statMode?.let(OsConstants::S_ISDIR)} " +
-                        "statMode=${statMode?.toString(8)} " +
-                        "statErrno=${(stat.exceptionOrNull() as? ErrnoException)?.errno} " +
-                        "lstatOk=${lstat.isSuccess} " +
-                        "lstatDir=${lstatMode?.let(OsConstants::S_ISDIR)} " +
-                        "lstatMode=${lstatMode?.toString(8)} " +
-                        "lstatErrno=${(lstat.exceptionOrNull() as? ErrnoException)?.errno} " +
-                        "access=${access.getOrNull()} " +
-                        "accessErrno=${(access.exceptionOrNull() as? ErrnoException)?.errno}",
-                )
-            }
+            val observation = "uid=${android.os.Process.myUid()} path=$path " +
+                "exists=${exists.getOrNull()} isDirectory=${isDirectory.getOrNull()} " +
+                "statOk=${stat.isSuccess} " +
+                "statDir=${statMode?.let(OsConstants::S_ISDIR)} " +
+                "statErrno=${(stat.exceptionOrNull() as? ErrnoException)?.errno} " +
+                "lstatOk=${lstat.isSuccess} " +
+                "lstatDir=${lstatMode?.let(OsConstants::S_ISDIR)} " +
+                "lstatErrno=${(lstat.exceptionOrNull() as? ErrnoException)?.errno} " +
+                "access=${access.getOrNull()} " +
+                "accessErrno=${(access.exceptionOrNull() as? ErrnoException)?.errno}"
+            // Export diagnostic observations separately; never use them to change detection.
+            runCatching { diagnosticSink?.invoke(observation) }
+            runCatching { android.util.Log.i("DuckFsDiagSys", observation) }
         }
     }
     return detected
