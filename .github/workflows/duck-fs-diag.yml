@@ -44,7 +44,7 @@ jobs:
           build_tools=$(sed -n 's/^duckdetector.android.buildTools=//p' gradle.properties)
           for apk in "${apks[@]}"; do
             badging=$("$ANDROID_HOME/build-tools/$build_tools/aapt" dump badging "$apk")
-            grep -q "package: name='com.eltavine.duckdetector.fsdiagstat'" <<< "$badging"
+            grep -q "package: name='com.eltavine.duckdetector.fsdiagexport'" <<< "$badging"
             "$ANDROID_HOME/build-tools/$build_tools/apksigner" verify "$apk"
             sha256sum "$apk"
           done
@@ -52,7 +52,7 @@ jobs:
       - name: Publish diagnostic APK
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: DuckDetector-FsDiagStat-Android17
+          name: DuckDetector-FsDiagExport-Android17
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 7

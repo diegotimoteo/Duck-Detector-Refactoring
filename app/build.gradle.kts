@@ -34,7 +34,7 @@ android {
     // Install diagnostic debug builds alongside the original app.
     buildTypes {
         getByName("debug") {
-            applicationIdSuffix = ".fsdiagstat"
+            applicationIdSuffix = ".fsdiagexport"
         }
     }
 
